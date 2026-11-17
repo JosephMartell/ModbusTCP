@@ -4,6 +4,8 @@ using ModbusTCP;
 using System.Net;
 using System.Collections.Generic;
 using System.Linq;
+using Xunit.v3;
+using FluentAssertions;
 
 namespace ModubusTCPTest
 {
@@ -73,10 +75,10 @@ namespace ModubusTCPTest
         public void Connect_and_disconnect()
         {
             MBTCPClient client = new MBTCPClient(testIp);
-            Assert.True(client.Status == ClientStatus.Connected);
+            client.Status.Should().Be(ClientStatus.Connected);
 
             client.Disconnect();
-            Assert.True(client.Status == ClientStatus.Disconnected);
+            client.Status.Should().Be(ClientStatus.Disconnected);
         }
 
         [Fact(DisplayName ="Code 0x03: Read Single Register")]
@@ -85,16 +87,18 @@ namespace ModubusTCPTest
             MBTCPClient client = new MBTCPClient(testIp);
 
             serverFixture.MemoryModel.Write4x(1000, new short[] { (Int16)2564 });
+            serverFixture.MBServer.RespondWithError = false;
             var values = serverFixture.MemoryModel.Read4x(1000, 1);
 
             var regs = client.ReadHoldingRegisters(1000, 1);
-            Assert.Equal(2564, regs.First());
+            regs.First().Should().Be(2564);
             client.Disconnect();
         }
 
         [Fact(DisplayName = "Code 0x10: Write Single Register")]
         public void Write_register()
         {
+            serverFixture.MBServer.RespondWithError = false;
             MBTCPClient client = new MBTCPClient(testIp);
             Int16 testValue = 9999;
             IEnumerable<Int16> writeData = new List<Int16>() { testValue };
@@ -102,38 +106,32 @@ namespace ModubusTCPTest
             client.Disconnect();
             var values = serverFixture.MemoryModel.Read4x(1001, 1);
 
-            Assert.Equal(testValue, values.First());
+            values.First().Should().Be(testValue);
         }
 
-        [Fact(DisplayName = "Code 0x03: Read multiple registers")]
+        [Fact(DisplayName = "Code 0x03: Read multiple registers", DisableParallelization = true)]
         public void Read_multiple_registers()
         {
-            serverFixture.MemoryModel.Write4x(1000, new short[] { 2564, 9999, 9876 });
+            var testValues = new short[] { 2564, 9999, 9876 };
+            serverFixture.MemoryModel.Write4x(1000, testValues);
             serverFixture.MBServer.RespondWithError = false;
             MBTCPClient client = new MBTCPClient(testIp);
             var regs = client.ReadHoldingRegisters(1000, 3).ToList();
             client.Disconnect();
-            Assert.Equal(3, regs.Count);
-            Assert.Equal(2564, regs[0]);
-            Assert.Equal(9999, regs[1]);
-            Assert.Equal(9876, regs[2]);
+            regs.Should().HaveCount(3).And.ContainInOrder(testValues);
         }
 
         [Fact(DisplayName = "Code 0x10: Write multiple registers")]
         public void Write_multiple_registers()
         {
+            serverFixture.MBServer.RespondWithError = false;
             MBTCPClient client = new MBTCPClient(testIp);
             List<Int16> writeData = new List<Int16>() { 5555, 6666, 7777, 8888 };
             client.WriteMultipleRegisters(1005, writeData);
             client.Disconnect();
 
             var regs = serverFixture.MemoryModel.Read4x(1005, 4).ToList();
-
-            Assert.Equal(writeData.Count, regs.Count);
-            Assert.Equal(writeData[0], regs[0]);
-            Assert.Equal(writeData[1], regs[1]);
-            Assert.Equal(writeData[2], regs[2]);
-            Assert.Equal(writeData[3], regs[3]);
+            regs.Should().HaveCount(4).And.ContainInOrder(writeData);
         }
 
         [Fact(DisplayName = "Bad response from server throws exception.")]
@@ -142,7 +140,8 @@ namespace ModubusTCPTest
             serverFixture.MBServer.RespondWithError = true;
             MBTCPClient client = new MBTCPClient(testIp);
             List<Int16> writeData = new List<Int16> { 123, 456, 789, 1234 };
-            Assert.ThrowsAny<Exception>(() => client.WriteMultipleRegisters(500, writeData));
+            var action = () => client.WriteMultipleRegisters(500, writeData);
+            action.Should().Throw<Exception>("Because the server responded with an error response.");
         }
     }
 }
