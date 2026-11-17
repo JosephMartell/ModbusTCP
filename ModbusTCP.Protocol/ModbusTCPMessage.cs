@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using ModbusTCP.Protocol;
 
 namespace ModbusTCP
 {
-    class ModbusTCPMessage
+    public class ModbusTCPMessage
     {
         public MBAP ApplicationHeader { get; }
         public ProtocolDataUnit PDU { get; }
@@ -27,6 +28,9 @@ namespace ModbusTCP
             return ApplicationHeader.GetBytes().Concat(PDU.GetBytes());
         }
 
+        //This is going to have to go. The abstraction fundamentally doesn't make sense. The modbus message should not depend
+        //on the memory model. And the server or client is the one that should be "processing" the message.
+        //TODO: Move message processing out of the message class. 
         public virtual ModbusTCPMessage Process(IMemoryModel memory) { return this; }
 
         public static ModbusTCPMessage ParseBytes(IEnumerable<byte> message)

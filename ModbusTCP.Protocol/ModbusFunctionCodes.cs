@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ModbusTCP
+namespace ModbusTCP.Protocol
 {
-    enum ModbusFunctionCodes
+    public enum ModbusFunctionCodes
         : byte
     {
         ReadCoil = 0x01,

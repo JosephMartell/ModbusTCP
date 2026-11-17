@@ -17,7 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ModbusTCP\ModbusTCP.csproj" />
+    <ProjectReference Include="..\ModbusTCP.Client\ModbusTCP.Client.csproj" />
+    <ProjectReference Include="..\ModbusTCP.Protocol\ModbusTCP.Protocol.csproj" />
+    <ProjectReference Include="..\ModbusTCP.Server\ModbusTCP.Server.csproj" />
   </ItemGroup>
 
 </Project>

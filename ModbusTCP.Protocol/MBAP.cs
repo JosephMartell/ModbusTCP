@@ -9,7 +9,7 @@ namespace ModbusTCP
     /// MODBUS Application Protocol header is used to identify a TCP packet as
     /// a MODBUS message.
     /// </summary>
-    class MBAP
+    public class MBAP
     {
         private Int16 _length = 0;
         public Byte UnitID { get; } = 0;

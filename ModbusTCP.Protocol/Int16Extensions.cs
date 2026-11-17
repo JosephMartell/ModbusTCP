@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ModbusTCP
 {
-    static class Int16Extensions
+    public static class Int16Extensions
     {
         public static byte HighByte(this Int16 i)
         {

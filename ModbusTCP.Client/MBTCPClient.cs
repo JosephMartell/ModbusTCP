@@ -2,8 +2,9 @@
 using System.Net;
 using System.Collections.Generic;
 using System.Linq;
+using ModbusTCP.Protocol;
 
-namespace ModbusTCP
+namespace ModbusTCP.Client
 {
     //TODO: Explicitly handle responses including errors.
     //TODO: Evaluate type of values for WriteMultipleRegisters.  Should this be IEnumerable of bytes? Words? Something else? Should this be overloaded for common formats?

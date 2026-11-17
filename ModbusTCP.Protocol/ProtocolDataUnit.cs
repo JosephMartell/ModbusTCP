@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using ModbusTCP.Protocol;
 
 namespace ModbusTCP
 {
-    class ProtocolDataUnit
+    public class ProtocolDataUnit
     {
         public ModbusFunctionCodes FunctionCode { get; }
         public IEnumerable<byte> Data { get; }

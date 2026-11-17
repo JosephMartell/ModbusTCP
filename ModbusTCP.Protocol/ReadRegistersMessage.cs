@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace ModbusTCP
 {
-    class ReadRegistersMessage
+    public class ReadRegistersMessage
         : ModbusTCPMessage
     {
         public ReadRegistersMessage(MBAP appHeader, ProtocolDataUnit pdu)

@@ -8,11 +8,13 @@ using System.Threading.Tasks;
 using System.Linq;
 
 
-namespace ModbusTCP
+namespace ModbusTCP.Server
 {
+
+
     public enum ServerStatus
     {
-        Connected, 
+        Connected,
         Disconnected
     }
 
@@ -72,15 +74,15 @@ namespace ModbusTCP
         {
             return new byte[]
             {
-                request.ToArray()[0],
-                request.ToArray()[1],
-                0x00,
-                0x00,
-                0x00,
-                0x03,
-                request.ToArray()[6],
-                (byte)(request.ToArray()[7] | 0x80),
-                0x01
+            request.ToArray()[0],
+            request.ToArray()[1],
+            0x00,
+            0x00,
+            0x00,
+            0x03,
+            request.ToArray()[6],
+            (byte)(request.ToArray()[7] | 0x80),
+            0x01
             };
         }
 
@@ -95,4 +97,5 @@ namespace ModbusTCP
             _listener.Dispose();
         }
     }
+
 }

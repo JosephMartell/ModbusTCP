@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ModbusTCP
 {
-    class WriteHoldingRegistersMessage
+    public class WriteHoldingRegistersMessage
         : ModbusTCPMessage
     {
         public WriteHoldingRegistersMessage(IEnumerable<byte> message)

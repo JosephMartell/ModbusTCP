@@ -5,6 +5,8 @@ using Xunit;
 using ModbusTCP;
 using System.Net;
 using System.Threading.Tasks;
+using ModbusTCP.Server;
+using ModbusTCP.Client;
 
 namespace ModubusTCPTest
 {
