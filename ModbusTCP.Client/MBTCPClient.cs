@@ -22,6 +22,32 @@ namespace ModbusTCP.Client
             tcpClient.Connect(new IPEndPoint(ip, 502));
         }
 
+        //0x01 - Read Coils (0x01)
+        public IEnumerable<bool> ReadCoils(short address, short count)
+        {
+            return new List<bool>();
+        }
+        //0x02 - Read Discrete Inputs
+        //0x03 - Read Holding Registers
+        //0x04 - Read Input Registers
+        //0x05 - Write Single Coil
+        //0x06 - Write Single Register
+        //0x07 - Read Exception Status (Serial only - do not implement)
+        //0x08 - Diagnostics (serial only - do not implement)
+        //0x0b - Get CommEvent Counter (serial only - do not implement)
+        //0x0c - Get Comm Event Log (serial only - do not implement)
+        //0x0f - Write Multiple Coils
+        //0x10 - Write Multiple Registers
+        //0x11 - Report Server ID (Serial only - do not implement)
+        //0x14 - Read File Record
+        //0x15 - Write File Record
+        //0x16 - Mask Write Register
+        //0x17 - Read/Write Multiple Registers
+        //0x18 - Read FIFO Queue
+        //0x2b - Encapslated Interface Transport (see below)
+        //  0x0d CANOpen General Reference Request and Response
+        //  0x0e Read Device Identification
+
         //TODO: Evaluate ReadHoldingRegisters return type.  Should this be words? Bytes? something else?
         //      At the core of the protocol, this is really returning words.  The words can be interpreted
         //      as floating point, integers, unsigned, etc.

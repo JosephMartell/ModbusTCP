@@ -8,6 +8,20 @@ namespace ModbusTCP
     public class ReadRegistersMessage
         : ModbusTCPMessage
     {
+        public static byte[] Request(Int16 address, Int16 length)
+        {
+            return new byte[0];
+        }
+
+        public static byte[] GoodResponse(Int16 address, Int16 length, IEnumerable<Int16> data)
+        {
+            return new byte[0];
+        }
+        public static byte[] ErrorResponse(Int16 address, Int16 length)
+        {
+            return new byte[0];
+        }
+
         public ReadRegistersMessage(MBAP appHeader, ProtocolDataUnit pdu)
             : base(appHeader, pdu)
         { }

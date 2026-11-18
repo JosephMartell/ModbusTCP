@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModbusTCP.Server", "ModbusT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModbusTCP.Client", "ModbusTCP.Client\ModbusTCP.Client.csproj", "{1A1AC8D3-464E-4E26-8868-638B13F8292B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLI_Client", "CLI_Client\CLI_Client.csproj", "{C9B13DC8-1208-4A1C-9ABC-4F8A03BAC3A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLI_Server", "CLI_Server\CLI_Server.csproj", "{B722A90A-E043-4C18-A55D-D9EF34AA82D9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{1A1AC8D3-464E-4E26-8868-638B13F8292B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A1AC8D3-464E-4E26-8868-638B13F8292B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A1AC8D3-464E-4E26-8868-638B13F8292B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9B13DC8-1208-4A1C-9ABC-4F8A03BAC3A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9B13DC8-1208-4A1C-9ABC-4F8A03BAC3A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9B13DC8-1208-4A1C-9ABC-4F8A03BAC3A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9B13DC8-1208-4A1C-9ABC-4F8A03BAC3A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B722A90A-E043-4C18-A55D-D9EF34AA82D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B722A90A-E043-4C18-A55D-D9EF34AA82D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B722A90A-E043-4C18-A55D-D9EF34AA82D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B722A90A-E043-4C18-A55D-D9EF34AA82D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

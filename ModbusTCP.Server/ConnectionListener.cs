@@ -26,10 +26,10 @@ namespace ModbusTCP.Server
         : IDisposable
     {
         private readonly TcpListener _listener;
-        private CancellationTokenSource _tokenSource;
+        private CancellationTokenSource? _tokenSource;
         private CancellationToken _token;
 
-        public event EventHandler<ConnectionAcceptedEventArgs> OnConnectionAccepted;
+        public event EventHandler<ConnectionAcceptedEventArgs>? OnConnectionAccepted;
 
         public ConnectionListener(IPAddress address, int port)
         {
