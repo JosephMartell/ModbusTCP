@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ModbusTCP
+namespace Modbus.Core
 {
     public static class Int16Extensions
     {

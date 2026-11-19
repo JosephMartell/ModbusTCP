@@ -3,6 +3,7 @@ using System.Net;
 using System.Collections.Generic;
 using System.Linq;
 using ModbusTCP.Protocol;
+using Modbus.Core;
 
 namespace ModbusTCP.Client
 {
@@ -13,10 +14,25 @@ namespace ModbusTCP.Client
         : IDisposable
     {
         public ClientStatus Status { get; private set; }
-        public System.Net.Sockets.TcpClient tcpClient;
-    
+
+        public IPAddress ServerIP { get; private set; }
+        protected System.Net.Sockets.TcpClient tcpClient;
+        private Int16 _transactionID = 0;
+        protected Int16 TransactionID
+        {
+            get
+            {
+                if (_transactionID >= Int16.MaxValue)
+                {
+                    _transactionID = 0;
+                }
+                return _transactionID++;
+            }
+        }
+
         public MBTCPClient(IPAddress ip)
         {
+            ServerIP = ip;
             Status = ClientStatus.Connected;
             tcpClient = new System.Net.Sockets.TcpClient();
             tcpClient.Connect(new IPEndPoint(ip, 502));
@@ -27,7 +43,12 @@ namespace ModbusTCP.Client
         {
             return new List<bool>();
         }
+
         //0x02 - Read Discrete Inputs
+        public void ReadDiscreteInputs(short address, short count)
+        {
+
+        }
         //0x03 - Read Holding Registers
         //0x04 - Read Input Registers
         //0x05 - Write Single Coil
@@ -53,57 +74,43 @@ namespace ModbusTCP.Client
         //      as floating point, integers, unsigned, etc.
         public IEnumerable<Int16> ReadHoldingRegisters(Int16 startRegister, Int16 count)
         {
-            List<byte> mbPacket = new List<byte>();
-
-            mbPacket.Add(0x03);
-            mbPacket.AddRange(startRegister.GetBytes());
-            mbPacket.AddRange(count.GetBytes());
-
-            MBAP mbap = MBAP.Create((Int16)(mbPacket.Count + 1), 0);
-            mbPacket.InsertRange(0, mbap.GetBytes());
-
-            tcpClient.GetStream().Write(mbPacket.ToArray(), 0, mbPacket.Count);
+            var mtcpRequest = ModbusTCPADU.Wrap(TransactionID, ReadHoldingRegistersPDU.Request(startRegister, count));
+            tcpClient.GetStream().Write(mtcpRequest.GetBytes().ToArray() , 0, mtcpRequest.GetBytes().Count());
 
             byte[] readBuffer = new byte[500];
+            int bufferLength = tcpClient.GetStream().Read(readBuffer, 0 , 500);
 
-            tcpClient.GetStream().Read(readBuffer, 0, 500);
 
-            int returnCount = (int)readBuffer[8];
-
-            List<Int16> returnList = new List<short>();
-            for (int i = 9; i < 9 + returnCount; i += 2)
+            //TODO: Add error handling for bad length.
+            var mtcpResponse = ModbusTCPADU.Deserialize(readBuffer.Take(bufferLength));
+            
+            if (mtcpResponse.PDU.IsExceptionResponse())
             {
-                returnList.Add(Int16Extensions.FromBytes(readBuffer[i], readBuffer[i + 1]));
+                throw new Exception("Received exception response.");
             }
 
-            return returnList;
+            var rhrResponse = ReadHoldingRegistersPDU.ValidResponse(mtcpResponse.PDU);
+
+            return rhrResponse.Values;
+
         }
 
         public void WriteMultipleRegisters(Int16 startRegister, IEnumerable<Int16> values)
         {
-            List<byte> mbPacket = new List<byte>();
-            mbPacket.Add(0x10);
-            mbPacket.AddRange(startRegister.GetBytes());
-            mbPacket.AddRange(((Int16)(values.Count())).GetBytes());
+            var wmrRequest = WriteMultipleRegistersPDU.Request(startRegister, values);
+            var mtcpRequest = ModbusTCPADU.Wrap(TransactionID, wmrRequest);
+            tcpClient.GetStream().Write(mtcpRequest.GetBytes().ToArray(), 0, mtcpRequest.GetBytes().Count());
 
-            var data = values.SelectMany(v => new List<byte>() { v.HighByte(), v.LowByte() });
-            mbPacket.Add(((Int16)data.Count()).LowByte());
-            mbPacket.AddRange(data.ToArray());
-
-            MBAP mbap = MBAP.Create((Int16)(mbPacket.Count + 1), 0);
-            mbPacket.InsertRange(0, mbap.GetBytes());
-
-            tcpClient.GetStream().Write(mbPacket.ToArray(), 0, mbPacket.Count);
-
-            byte[] buffer = new byte[500];
+            byte[] readBuffer = new byte[500];
 
             //technically, the operation should be confirmed by examining the response
-            tcpClient.GetStream().Read(buffer, 0, buffer.Length);
+            int bufferLength = tcpClient.GetStream().Read(readBuffer, 0, readBuffer.Length);
+            var mtcpResponse = ModbusTCPADU.Deserialize(readBuffer.Take(bufferLength));
 
             //error function codes will be: (original function code) | (0x80)
-            if ((buffer[7] & 0x80) > 0)
+            if (mtcpResponse.PDU.IsExceptionResponse())
             {
-                throw new Exception();
+                throw new Exception("Received exception response.");
             }
         }
 

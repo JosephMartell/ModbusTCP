@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Modbus.Core\Modbus.Core.csproj" />
+  </ItemGroup>
+
 </Project>

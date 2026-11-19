@@ -146,5 +146,14 @@ namespace ModubusTCPTest
             var action = () => client.WriteMultipleRegisters(500, writeData);
             action.Should().Throw<Exception>("Because the server responded with an error response.");
         }
+
+        [Fact(DisplayName = "Verify memory model")]
+        public void Verify_memory_model()
+        {
+            var testValues = new short[] { 2564, 9999, 9876 };
+            serverFixture.MemoryModel.Write4x(1000, testValues);
+            var values = serverFixture.MemoryModel.Read4x(1000, 3);
+            values.Should().ContainInOrder(testValues);
+        }
     }
 }

@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Modbus.Core;
 
-namespace ModbusTCP
+namespace ModbusTCP.Protocol
 {
     /// <summary>
     /// MODBUS Application Protocol header is used to identify a TCP packet as
@@ -11,30 +12,52 @@ namespace ModbusTCP
     /// </summary>
     public class MBAP
     {
-        private Int16 _length = 0;
+        public Int16 TransactionID { get; private set; }
+        public const Int16 ProtocolIdentifier  = 0;
+
+        public Int16 Length { get; private set; }
         public Byte UnitID { get; } = 0;
+
         protected MBAP(Int16 length, byte unitID)
         {
-            _length = length;
+            Length = length;
             UnitID = unitID;
         }
 
+        protected MBAP(Int16 length, byte unitID, Int16 transactionID)
+        {
+            Length = length;
+            UnitID = unitID;
+            TransactionID = transactionID;
+        }
+
+        //TODO: Move this parsing logic to the static method. Limit MBAP to a single constructor.
         protected MBAP(IEnumerable<byte> message)
         {
-            _length = Int16Extensions.FromBytes(message.Skip(4).First(), message.Skip(5).First());
+            Length = Int16Extensions.FromBytes(message.Skip(4).First(), message.Skip(5).First());
             UnitID = message.Skip(6).First();
         }
 
         public byte[] GetBytes()
         {
-            return new byte[] { 0x00, 0x00, 0x00, 0x00, _length.HighByte(), _length.LowByte(), UnitID };
+            return new byte[] 
+            { 
+                TransactionID.HighByte(), 
+                TransactionID.LowByte(), 
+                ProtocolIdentifier.HighByte(), 
+                ProtocolIdentifier.LowByte(), 
+                Length.HighByte(), 
+                Length.LowByte(), 
+                UnitID };
         }
 
-        public static MBAP Create(Int16 length, byte unitID)
+        public static MBAP Create(Int16 transactionID, Int16 length, byte unitID)
         {
-            return new MBAP(length, unitID);
+            MBAP mbap = new MBAP(length, unitID, transactionID);
+            return mbap;
         }
 
+        //TODO: What validation should be added here?
         public static MBAP ParseFromMessage(IEnumerable<byte> message)
         {
             return new MBAP(message);
