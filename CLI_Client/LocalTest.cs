@@ -27,4 +27,13 @@ namespace CLI_Client
             }
         }
     }
+
+    [CommandClass("read-coils")]
+    internal class ReadCoils
+    {
+        public void RunTest()
+        {
+
+        }
+    }
 }

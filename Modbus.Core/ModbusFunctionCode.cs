@@ -7,8 +7,8 @@ namespace Modbus.Core
     public enum ModbusFunctionCode
         : byte
     {
-        ReadCoil = 0x01,
-        ReadInput = 0x02,
+        ReadCoils = 0x01,
+        ReadDiscreteInputs = 0x02,
         ReadHoldingRegisters = 0x03,
         ReadInputRegisters = 0x04,
         ForceSingleCoil = 0x05,

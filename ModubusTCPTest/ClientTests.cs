@@ -9,6 +9,7 @@ using FluentAssertions;
 using ModbusTCP.Protocol;
 using ModbusTCP.Server;
 using ModbusTCP.Client;
+using Modbus.Core;
 
 namespace ModubusTCPTest
 {
@@ -17,9 +18,28 @@ namespace ModubusTCPTest
     public class DictMemoryModel
         : IMemoryModel
     {
+        Dictionary<UInt16, bool> _0xMemory = new Dictionary<UInt16, bool>();
         Dictionary<int, Int16> _4xMemeory = new Dictionary<int, short>();
 
-        public IEnumerable<short> Read4x(int address, int length)
+
+        public IEnumerable<bool> Read0x(UInt16 address, UInt16 length)
+        {
+            bool[] values = new bool[length];
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (_0xMemory.ContainsKey((UInt16)(i + address)))
+                {
+                    values[i] = _0xMemory[(UInt16)(i + address)];
+                }
+                else
+                {
+                    values[i] = false;
+                }
+            }
+            return values;
+        }
+
+        public IEnumerable<short> Read4x(UInt16 address, UInt16 length)
         {
             short[] values = new short[length];
             for (int i = 0; i < values.Length; i++)
@@ -36,7 +56,7 @@ namespace ModubusTCPTest
             return values;
         }
 
-        public void Write4x(int address, IEnumerable<short> values)
+        public void Write4x(UInt16 address, IEnumerable<short> values)
         {
             int offset = 0;
             values.ToList().ForEach(v => {

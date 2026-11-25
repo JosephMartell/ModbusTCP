@@ -38,10 +38,19 @@ namespace ModbusTCP.Client
             tcpClient.Connect(new IPEndPoint(ip, 502));
         }
 
+
         //0x01 - Read Coils (0x01)
-        public IEnumerable<bool> ReadCoils(short address, short count)
+        public IEnumerable<bool> ReadCoils(ushort address, ushort count)
         {
-            return new List<bool>();
+            var rcRequest = 
+                ModbusTCPADU.Wrap(
+                    TransactionID, 
+                    ReadCoilsPDU.Request(address, count));
+
+            var response = SendRequest(rcRequest);
+            var rcResponse = ReadCoilsPDU.ValidResponse(response.PDU);
+            return rcResponse.CoilStatus;
+
         }
 
         //0x02 - Read Discrete Inputs
@@ -50,6 +59,21 @@ namespace ModbusTCP.Client
 
         }
         //0x03 - Read Holding Registers
+        //TODO: Evaluate ReadHoldingRegisters return type.  Should this be words? Bytes? something else?
+        //      At the core of the protocol, this is really returning words.  The words can be interpreted
+        //      as floating point, integers, unsigned, etc.
+        public IEnumerable<Int16> ReadHoldingRegisters(UInt16 startRegister, UInt16 count)
+        {
+            var rhrRequest = 
+                ModbusTCPADU.Wrap(
+                    TransactionID, 
+                    ReadHoldingRegistersPDU.Request(startRegister, count));
+            var response = SendRequest(rhrRequest);
+            var rhrResponse = ReadHoldingRegistersPDU.ValidResponse(response.PDU);
+            return rhrResponse.Values;
+
+        }
+
         //0x04 - Read Input Registers
         //0x05 - Write Single Coil
         //0x06 - Write Single Register
@@ -59,6 +83,15 @@ namespace ModbusTCP.Client
         //0x0c - Get Comm Event Log (serial only - do not implement)
         //0x0f - Write Multiple Coils
         //0x10 - Write Multiple Registers
+        public void WriteMultipleRegisters(UInt16 startRegister, IEnumerable<Int16> values)
+        {
+            var mtcpRequest = 
+                ModbusTCPADU.Wrap(
+                    TransactionID,
+                    WriteMultipleRegistersPDU.Request(startRegister, values));
+
+            var response = SendRequest(mtcpRequest);
+        }
         //0x11 - Report Server ID (Serial only - do not implement)
         //0x14 - Read File Record
         //0x15 - Write File Record
@@ -69,49 +102,22 @@ namespace ModbusTCP.Client
         //  0x0d CANOpen General Reference Request and Response
         //  0x0e Read Device Identification
 
-        //TODO: Evaluate ReadHoldingRegisters return type.  Should this be words? Bytes? something else?
-        //      At the core of the protocol, this is really returning words.  The words can be interpreted
-        //      as floating point, integers, unsigned, etc.
-        public IEnumerable<Int16> ReadHoldingRegisters(Int16 startRegister, Int16 count)
+
+        protected ModbusTCPADU SendRequest(ModbusTCPADU request)
         {
-            var mtcpRequest = ModbusTCPADU.Wrap(TransactionID, ReadHoldingRegistersPDU.Request(startRegister, count));
-            tcpClient.GetStream().Write(mtcpRequest.GetBytes().ToArray() , 0, mtcpRequest.GetBytes().Count());
+            tcpClient.GetStream().Write(request.GetBytes().ToArray(), 0, request.GetBytes().Count());
 
             byte[] readBuffer = new byte[500];
-            int bufferLength = tcpClient.GetStream().Read(readBuffer, 0 , 500);
-
+            int bufferLength = tcpClient.GetStream().Read(readBuffer, 0, 500);
 
             //TODO: Add error handling for bad length.
-            var mtcpResponse = ModbusTCPADU.Deserialize(readBuffer.Take(bufferLength));
-            
-            if (mtcpResponse.PDU.IsExceptionResponse())
+            var response = ModbusTCPADU.Deserialize(readBuffer.Take(bufferLength));
+            if (response.PDU.IsExceptionResponse())
             {
                 throw new Exception("Received exception response.");
             }
 
-            var rhrResponse = ReadHoldingRegistersPDU.ValidResponse(mtcpResponse.PDU);
-
-            return rhrResponse.Values;
-
-        }
-
-        public void WriteMultipleRegisters(Int16 startRegister, IEnumerable<Int16> values)
-        {
-            var wmrRequest = WriteMultipleRegistersPDU.Request(startRegister, values);
-            var mtcpRequest = ModbusTCPADU.Wrap(TransactionID, wmrRequest);
-            tcpClient.GetStream().Write(mtcpRequest.GetBytes().ToArray(), 0, mtcpRequest.GetBytes().Count());
-
-            byte[] readBuffer = new byte[500];
-
-            //technically, the operation should be confirmed by examining the response
-            int bufferLength = tcpClient.GetStream().Read(readBuffer, 0, readBuffer.Length);
-            var mtcpResponse = ModbusTCPADU.Deserialize(readBuffer.Take(bufferLength));
-
-            //error function codes will be: (original function code) | (0x80)
-            if (mtcpResponse.PDU.IsExceptionResponse())
-            {
-                throw new Exception("Received exception response.");
-            }
+            return response;
         }
 
         public void Disconnect()

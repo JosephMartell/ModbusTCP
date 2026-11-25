@@ -35,7 +35,6 @@ namespace Modbus.Core
 
         public virtual byte[] GetBytes()
         {
-            Console.WriteLine("Inside base PDU GetBytes");
             return new byte[]
             {
                 (byte)FunctionCode

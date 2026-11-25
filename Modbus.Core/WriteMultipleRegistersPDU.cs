@@ -2,7 +2,7 @@
 {
     public static class WriteMultipleRegistersPDU
     {
-        public static WriteMultipleRegistersRequest Request(short startAddress, IEnumerable<Int16> values)
+        public static WriteMultipleRegistersRequest Request(UInt16 startAddress, IEnumerable<Int16> values)
         {
             return new WriteMultipleRegistersRequest(startAddress, values);
         }
@@ -16,9 +16,9 @@
             {
                 throw new ArgumentException($"PDU data must contain at least 8 bytes for a WriteMultipleRegisters request. PDU length: {pdu.GetBytes().Count()}");
             }
-            short startAddress = Int16Extensions.FromBytes(pdu.Data[0], pdu.Data[1]);
-            short regQuantity = Int16Extensions.FromBytes(pdu.Data[2], pdu.Data[3]);
-            short byteCount = pdu.Data[4];
+            UInt16 startAddress = UInt16Extensions.FromBytes(pdu.Data[0], pdu.Data[1]);
+            UInt16 regQuantity = UInt16Extensions.FromBytes(pdu.Data[2], pdu.Data[3]);
+            UInt16 byteCount = pdu.Data[4];
             if (regQuantity < 1 || regQuantity > 123)
             {
                 throw new ArgumentOutOfRangeException(nameof(regQuantity), "Quantity must be between 1 and 123.");
@@ -39,9 +39,9 @@
         public class WriteMultipleRegistersRequest
             : PDU
         {
-            public short StartAddress { get; set; }
+            public UInt16 StartAddress { get; set; }
             public IEnumerable<Int16> Values { get; set; }
-            internal WriteMultipleRegistersRequest(short startAddress, IEnumerable<Int16> values)
+            internal WriteMultipleRegistersRequest(UInt16 startAddress, IEnumerable<Int16> values)
                 : base(ModbusFunctionCode.WriteMultipleRegisters)
             {
                 StartAddress = startAddress;
@@ -60,7 +60,7 @@
             }
         }
 
-        public static WriteMultipleRegistersValidResponse ValidResponse(short startAddress, short quantity)
+        public static WriteMultipleRegistersValidResponse ValidResponse(UInt16 startAddress, UInt16 quantity)
         {
             return new WriteMultipleRegistersValidResponse(startAddress, quantity);
         }
@@ -68,9 +68,9 @@
         public class WriteMultipleRegistersValidResponse
             : PDU
         {
-            public short StartAddress { get; set; }
-            public short Quantity { get; set; }
-            internal WriteMultipleRegistersValidResponse(short startAddress, short quantity)
+            public UInt16 StartAddress { get; set; }
+            public UInt16 Quantity { get; set; }
+            internal WriteMultipleRegistersValidResponse(UInt16 startAddress, UInt16 quantity)
                 : base(ModbusFunctionCode.WriteMultipleRegisters)
             {
                 StartAddress = startAddress;

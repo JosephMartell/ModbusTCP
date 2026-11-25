@@ -66,6 +66,8 @@ namespace ModbusTCP.Server
                     var len = await e.Client.GetStream().ReadAsync(buffer, 0, buffer.Length);
                     ModbusTCPADU message = ModbusTCPADU.Deserialize(buffer.Take(len));
 
+
+                    //TODO: As soon as we get past the TCP ADU and start handling the PDU, we should pass this off to the ServerBase functions in Modbus.Core.
                     IEnumerable<byte> response = IllegalFunctionResponse(buffer);
                     if ((!message.PDU.IsValidFunctionCode()) || RespondWithError)
                     {
@@ -75,9 +77,9 @@ namespace ModbusTCP.Server
                     {
                         switch (message.PDU.FunctionCode)
                         {
-                            case ModbusFunctionCode.ReadCoil:
+                            case ModbusFunctionCode.ReadCoils:
                                 break;
-                            case ModbusFunctionCode.ReadInput:
+                            case ModbusFunctionCode.ReadDiscreteInputs:
                                 break;
                             case ModbusFunctionCode.ReadHoldingRegisters:
                                 var request = ReadHoldingRegistersPDU.Request(message.PDU.GetBytes());
@@ -110,7 +112,7 @@ namespace ModbusTCP.Server
                                 break;
                             case ModbusFunctionCode.WriteMultipleRegisters:
                                 var wmrRequest = WriteMultipleRegistersPDU.Request(message.PDU);
-                                var wmrResponsePDU = WriteMultipleRegistersPDU.ValidResponse(wmrRequest.StartAddress, (short)wmrRequest.Values.Count());
+                                var wmrResponsePDU = WriteMultipleRegistersPDU.ValidResponse(wmrRequest.StartAddress, (UInt16)wmrRequest.Values.Count());
                                 _memoryModel.Write4x(wmrRequest.StartAddress, wmrRequest.Values);
                                 response = ModbusTCPADU.RespondTo(message, wmrResponsePDU).GetBytes();
                                 break;
