@@ -36,7 +36,8 @@ namespace ModbusTCP.Server
     /// This object shold respond to a new request from the client.
     /// </summary>
     public class MBTCPServer
-        : IDisposable
+        : ServerBase,
+        IDisposable
     {
         public ServerStatus Status { get; private set; }
         public bool RespondWithError { get; set; }
@@ -45,6 +46,7 @@ namespace ModbusTCP.Server
         private readonly IMemoryModel _memoryModel;
 
         public MBTCPServer(IPAddress address, int port, IMemoryModel memoryModel)
+            : base(memoryModel)
         {
             _listener = new ConnectionListener(address, port);
             _listener.OnConnectionAccepted += _listener_OnConnectionAccepted;
@@ -53,7 +55,7 @@ namespace ModbusTCP.Server
             Status = ServerStatus.Connected;
         }
 
-        private void _listener_OnConnectionAccepted(object sender, ConnectionAcceptedEventArgs e)
+        private void _listener_OnConnectionAccepted(object? sender, ConnectionAcceptedEventArgs e)
         {
             Task.Run(async () =>
             {
@@ -64,99 +66,18 @@ namespace ModbusTCP.Server
                     // Limiting message buffer length will help mitigate attacks.
                     byte[] buffer = new byte[260]; 
                     var len = await e.Client.GetStream().ReadAsync(buffer, 0, buffer.Length);
-                    ModbusTCPADU message = ModbusTCPADU.Deserialize(buffer.Take(len));
+                    ModbusTCPADU request = ModbusTCPADU.Deserialize(buffer.Take(len));
 
-
-                    //TODO: As soon as we get past the TCP ADU and start handling the PDU, we should pass this off to the ServerBase functions in Modbus.Core.
-                    IEnumerable<byte> response = IllegalFunctionResponse(buffer);
-                    if ((!message.PDU.IsValidFunctionCode()) || RespondWithError)
+                    PDU responsePDU = PDU.GetInvalidFunctionCodePDU(request.PDU.FunctionCode);
+                    
+                    if ((request.PDU.IsValidFunctionCode()) && !RespondWithError)
                     {
-                        response = ModbusTCPADU.RespondTo(message, PDU.GetInvalidFunctionCodePDU(message.PDU.FunctionCode)).GetBytes();                        
+                        responsePDU = ProcessRequest(request.PDU);
                     }
-                    else
-                    {
-                        switch (message.PDU.FunctionCode)
-                        {
-                            case ModbusFunctionCode.ReadCoils:
-                                break;
-                            case ModbusFunctionCode.ReadDiscreteInputs:
-                                break;
-                            case ModbusFunctionCode.ReadHoldingRegisters:
-                                var request = ReadHoldingRegistersPDU.Request(message.PDU.GetBytes());
-                                var responsePDU = ReadHoldingRegistersPDU.ValidResponse(_memoryModel.Read4x(request.Address, request.Length));
-                                response = ModbusTCPADU.RespondTo(message, responsePDU).GetBytes();
-                                break;
-                            case ModbusFunctionCode.ReadInputRegisters:
-                                break;
-                            case ModbusFunctionCode.ForceSingleCoil:
-                                break;
-                            case ModbusFunctionCode.PresetSingleRegister:
-                                break;
-                            case ModbusFunctionCode.ReadExceptionStatus:
-                                break;
-                            case ModbusFunctionCode.Diagnostics:
-                                break;
-                            case ModbusFunctionCode.Program484:
-                                break;
-                            case ModbusFunctionCode.Poll484:
-                                break;
-                            case ModbusFunctionCode.FetchCommEventCounter:
-                                break;
-                            case ModbusFunctionCode.FetchCommEventLog:
-                                break;
-                            case ModbusFunctionCode.ProgramController:
-                                break;
-                            case ModbusFunctionCode.PollController:
-                                break;
-                            case ModbusFunctionCode.ForceMultipleCoils:
-                                break;
-                            case ModbusFunctionCode.WriteMultipleRegisters:
-                                var wmrRequest = WriteMultipleRegistersPDU.Request(message.PDU);
-                                var wmrResponsePDU = WriteMultipleRegistersPDU.ValidResponse(wmrRequest.StartAddress, (UInt16)wmrRequest.Values.Count());
-                                _memoryModel.Write4x(wmrRequest.StartAddress, wmrRequest.Values);
-                                response = ModbusTCPADU.RespondTo(message, wmrResponsePDU).GetBytes();
-                                break;
-                            case ModbusFunctionCode.ReportSlaveID:
-                                break;
-                            case ModbusFunctionCode.Program884:
-                                break;
-                            case ModbusFunctionCode.ResetCommLink:
-                                break;
-                            case ModbusFunctionCode.ReadGeneralReference:
-                                break;
-                            case ModbusFunctionCode.WriteGeneralReference:
-                                break;
-                            case ModbusFunctionCode.MaskWrite4xRegister:
-                                break;
-                            case ModbusFunctionCode.ReadWrite4xRegister:
-                                break;
-                            case ModbusFunctionCode.ReadFIFOQueue:
-                                break;
-                            case ModbusFunctionCode.ErrorMask:
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    e.Client.GetStream().Write(response.ToArray(), 0, response.Count());
+                    var mtcpResponsADU = ModbusTCPADU.RespondTo(request, responsePDU);
+                    e.Client.GetStream().Write(mtcpResponsADU.GetBytes().ToArray(), 0, mtcpResponsADU.GetBytes().Count());
                 }
             }, e.CancellationToken);
-        }
-
-        private IEnumerable<byte> IllegalFunctionResponse(IEnumerable<byte> request)
-        {
-            return new byte[]
-            {
-            request.ToArray()[0],
-            request.ToArray()[1],
-            0x00,
-            0x00,
-            0x00,
-            0x03,
-            request.ToArray()[6],
-            (byte)(request.ToArray()[7] | 0x80),
-            0x01
-            };
         }
 
         public void Stop()

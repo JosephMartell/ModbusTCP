@@ -11,6 +11,7 @@ namespace Modbus.Core
     public interface IMemoryModel
     {
         IEnumerable<bool> Read0x(UInt16 address, UInt16 length);
+        void Write0x(UInt16 address, IEnumerable<bool> values);
 
         IEnumerable<Int16> Read4x(UInt16 address, UInt16 length);
         void Write4x(UInt16 address, IEnumerable<Int16> values);

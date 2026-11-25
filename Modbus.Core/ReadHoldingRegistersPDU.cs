@@ -8,16 +8,35 @@
             return new ReadHoldingRegistersRequest(address, length);
         }
 
-        public static ReadHoldingRegistersRequest Request(IEnumerable<byte> requestBytes)
+        //public static ReadHoldingRegistersRequest Request(IEnumerable<byte> requestBytes)
+        //{
+        //    if (requestBytes.Count() != 5)
+        //    {
+        //        throw new ArgumentException("Invalid request bytes for ReadHoldingRegisters.");
+        //    }
+
+        //    UInt16 address = UInt16Extensions.FromBytes(requestBytes.Skip(1).First(), requestBytes.Skip(2).First());
+        //    UInt16 length = UInt16Extensions.FromBytes(requestBytes.Skip(3).First(), requestBytes.Skip(4).First());
+        //    return new ReadHoldingRegistersRequest(address, length);
+        //}
+
+        public static ReadHoldingRegistersRequest Request(PDU requestPDU)
         {
-            if (requestBytes.Count() != 5)
+            if (requestPDU.FunctionCode != ModbusFunctionCode.ReadHoldingRegisters)
             {
-                throw new ArgumentException("Invalid request bytes for ReadHoldingRegisters.");
+                throw new ArgumentException("Invalid request type for ReadHoldingRegisters");
             }
 
-            UInt16 address = UInt16Extensions.FromBytes(requestBytes.Skip(1).First(), requestBytes.Skip(2).First());
-            UInt16 length = UInt16Extensions.FromBytes(requestBytes.Skip(3).First(), requestBytes.Skip(4).First());
+            var bytes = requestPDU.GetBytes().ToArray();
+            if (bytes.Count() != 5)
+            {
+                throw new ArgumentException("Invalid byte count for ReadHoldingRegisters request PDU");
+            }
+
+            UInt16 address = UInt16Extensions.FromBytes(bytes[1], bytes[2]);
+            UInt16 length = UInt16Extensions.FromBytes(bytes[3], bytes[4]);
             return new ReadHoldingRegistersRequest(address, length);
+
         }
 
         public class ReadHoldingRegistersRequest
@@ -104,16 +123,16 @@
         }
 
 
-        public static ReadHoldingRegistersErrorResponse ErrorResponse(ExceptionCode exceptionCode)
+        public static ReadHoldingRegistersExceptionResponse ExceptionResponse(ExceptionCode exceptionCode)
         {
-            return new ReadHoldingRegistersErrorResponse(exceptionCode);
+            return new ReadHoldingRegistersExceptionResponse(exceptionCode);
         }
 
-        public class ReadHoldingRegistersErrorResponse
+        public class ReadHoldingRegistersExceptionResponse
             : PDU
         {
             public ExceptionCode ExceptionCode { get; private set; }
-            public ReadHoldingRegistersErrorResponse(ExceptionCode exceptionCode)
+            public ReadHoldingRegistersExceptionResponse(ExceptionCode exceptionCode)
                 : base(ModbusFunctionCode.ReadHoldingRegisters)
             {
                 if (exceptionCode != (ExceptionCode.IllegalFunction |

@@ -62,6 +62,14 @@
 
         public static WriteMultipleRegistersValidResponse ValidResponse(UInt16 startAddress, UInt16 quantity)
         {
+            if (quantity > 123)
+            {
+                throw new ArgumentException("Quantity cannot exceed 123 registers.");
+            }
+            if (startAddress + quantity > 65536)
+            {
+                throw new ArgumentException("Starting address and quantity exceeds valid memory address space.");
+            }
             return new WriteMultipleRegistersValidResponse(startAddress, quantity);
         }
 
@@ -84,5 +92,35 @@
                 };
             }
         }
+
+        public static WriteMultipleRegistersExceptionResponse ExceptionResponse(ExceptionCode exceptionCode)
+        {
+            return new WriteMultipleRegistersExceptionResponse(exceptionCode);
+        }
+
+        public class WriteMultipleRegistersExceptionResponse
+            : PDU
+        {
+            public ExceptionCode ExceptionCode { get; private set; }
+            public WriteMultipleRegistersExceptionResponse(ExceptionCode exceptionCode)
+                : base(ModbusFunctionCode.ReadHoldingRegisters)
+            {
+                if (exceptionCode != (ExceptionCode.IllegalFunction |
+                                      ExceptionCode.IllegalDataAddress |
+                                      ExceptionCode.IllegalDataValue |
+                                      ExceptionCode.ServerDeviceFailure))
+                {
+                    throw new ArgumentOutOfRangeException(nameof(exceptionCode), "Invalid exception code.");
+                }
+                ExceptionCode = exceptionCode;
+
+                Data = new byte[]
+                {
+                    (byte)ExceptionCode
+                };
+            }
+        }
+
+
     }
 }

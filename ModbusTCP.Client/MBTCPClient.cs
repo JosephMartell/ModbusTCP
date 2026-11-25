@@ -58,6 +58,7 @@ namespace ModbusTCP.Client
         {
 
         }
+
         //0x03 - Read Holding Registers
         //TODO: Evaluate ReadHoldingRegisters return type.  Should this be words? Bytes? something else?
         //      At the core of the protocol, this is really returning words.  The words can be interpreted

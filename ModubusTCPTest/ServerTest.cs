@@ -7,6 +7,7 @@ using System.Net;
 using System.Threading.Tasks;
 using ModbusTCP.Server;
 using ModbusTCP.Client;
+using Modbus.Core;
 
 namespace ModubusTCPTest
 {

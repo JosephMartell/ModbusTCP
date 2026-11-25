@@ -40,7 +40,7 @@ namespace Modbus.Core
                 case ModbusFunctionCode.ReadDiscreteInputs:
                     break;
                 case ModbusFunctionCode.ReadHoldingRegisters:
-                    break;
+                    return ReadHoldingRegisters(ReadHoldingRegistersPDU.Request(requestPDU));
                 case ModbusFunctionCode.ReadInputRegisters:
                     break;
                 case ModbusFunctionCode.ForceSingleCoil:
@@ -66,7 +66,7 @@ namespace Modbus.Core
                 case ModbusFunctionCode.ForceMultipleCoils:
                     break;
                 case ModbusFunctionCode.WriteMultipleRegisters:
-                    break;
+                    return WriteMultipleRegisters(WriteMultipleRegistersPDU.Request(requestPDU));
                 case ModbusFunctionCode.ReportSlaveID:
                     break;
                 case ModbusFunctionCode.Program884:
@@ -95,6 +95,7 @@ namespace Modbus.Core
 
         //There should be a 1:1 correlation between the methods here and the Modbus function codes supported.
 
+        //0x01 - Read Coils (0x01)
         public virtual PDU ReadCoils(ReadCoilsPDU.ReadCoilsRequest request)
         {
             if (request.Quantity < 1 || request.Quantity > 2000)
@@ -116,9 +117,71 @@ namespace Modbus.Core
             }
         }
 
-        //public virtual PDU ReadDiscreteInputs(ReadDiscreteInputsPDU.ReadDiscreteInputsRequest pdu)
-        //{
-        //}
+
+        //0x02 - Read Discrete Inputs
+        //0x03 - Read Holding Registers
+        public virtual PDU ReadHoldingRegisters(ReadHoldingRegistersPDU.ReadHoldingRegistersRequest request)
+        {
+            if (request.Length < 1 || request.Length > 125)
+            {
+                return ReadHoldingRegistersPDU.ExceptionResponse(ExceptionCode.IllegalDataValue);
+            }
+            if (request.Address < 0 || request.Address + request.Length > 65536)
+            {
+                return ReadHoldingRegistersPDU.ExceptionResponse(ExceptionCode.IllegalDataAddress);
+            }
+
+            try
+            {
+                return ReadHoldingRegistersPDU.ValidResponse(MemoryModel.Read4x(request.Address, request.Length));
+            }
+            catch
+            {
+                return ReadHoldingRegistersPDU.ExceptionResponse(ExceptionCode.ServerDeviceBusy);
+            }
+
+        }
+        //0x04 - Read Input Registers
+        //0x05 - Write Single Coil
+        //0x06 - Write Single Register
+        //0x07 - Read Exception Status (Serial only - do not implement)
+        //0x08 - Diagnostics (serial only - do not implement)
+        //0x0b - Get CommEvent Counter (serial only - do not implement)
+        //0x0c - Get Comm Event Log (serial only - do not implement)
+        //0x0f - Write Multiple Coils
+        //0x10 - Write Multiple Registers
+        public virtual PDU WriteMultipleRegisters(WriteMultipleRegistersPDU.WriteMultipleRegistersRequest request)
+        {
+            if (request.Values.Count() < 1 || request.Values.Count() > 123)
+            {
+                return WriteMultipleRegistersPDU.ExceptionResponse(ExceptionCode.IllegalDataValue);
+            }
+            if (request.StartAddress < 0 || request.StartAddress + request.Values.Count() > 65536)
+            {
+                return WriteMultipleRegistersPDU.ExceptionResponse(ExceptionCode.IllegalDataAddress);
+            }
+
+            try
+            {
+                MemoryModel.Write4x(request.StartAddress, request.Values);
+                return WriteMultipleRegistersPDU.ValidResponse(request.StartAddress, (UInt16)request.Values.Count());
+            }
+            catch
+            {
+                return WriteMultipleRegistersPDU.ExceptionResponse(ExceptionCode.ServerDeviceBusy);
+            }
+
+        }
+
+        //0x11 - Report Server ID (Serial only - do not implement)
+        //0x14 - Read File Record
+        //0x15 - Write File Record
+        //0x16 - Mask Write Register
+        //0x17 - Read/Write Multiple Registers
+        //0x18 - Read FIFO Queue
+        //0x2b - Encapslated Interface Transport (see below)
+        //  0x0d CANOpen General Reference Request and Response
+        //  0x0e Read Device Identification
 
     }
 }
